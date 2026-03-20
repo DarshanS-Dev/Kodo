@@ -34,8 +34,8 @@ with open("problems.json") as f:
 def comeback_brief(data :SessionStart):
     user_id = data.user_id
     last_working = memory.reflect(userid=user_id, query="What was the user last working on?", budget="mid")
-    prompt = "you are Kōdo, generate a warm personalized session opener"
-    return llm.chat(system_prompt=prompt, user_query=last_working)
+    prompt = f"You are Kōdo. The user is returning. Here's what they were last working on:\n{last_working}\n\nGenerate a warm, personalized session opener."
+    return llm.chat(system_prompt=prompt, user_query="")
 
 @app.post('/chat')
 def chat_with_kodo(message: UserQuery):
