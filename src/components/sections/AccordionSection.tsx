@@ -15,7 +15,7 @@ const cards = [
                 <div className="mb-12">
                     <div className="flex items-center gap-2 mb-6">
                         <span className="w-1.5 h-1.5 rounded-[1px] border border-current bg-transparent"></span>
-                        <span className="text-sm font-medium opacity-80">Comeback Brief.</span>
+                        <span className="text-sm font-medium opacity-80 uppercase tracking-widest">Comeback Brief</span>
                     </div>
                     <p className="text-2xl md:text-3xl font-medium leading-[1.3] opacity-90 tracking-tight">
                         Whether you left off stuck on recursion or halfway through a DP problem, Kōdo already knows. Every session opens with a personalized brief built entirely from your last interaction.
@@ -31,7 +31,7 @@ const cards = [
                             <span className="w-6 h-6 rounded-full border border-current border-opacity-20 flex items-center justify-center text-[10px] font-bold shrink-0">
                                 {itm.n}
                             </span>
-                            <span className="text-sm font-medium">{itm.t}</span>
+                            <span className="text-sm font-medium opacity-70 uppercase tracking-tighter">{itm.t}</span>
                         </li>
                     ))}
                 </ul>
@@ -48,7 +48,7 @@ const cards = [
                 <div className="mb-12">
                     <div className="flex items-center gap-2 mb-6">
                         <span className="w-1 h-1 rounded-full border border-current bg-transparent"></span>
-                        <span className="text-sm font-medium opacity-80">Pattern Interrupt.</span>
+                        <span className="text-sm font-medium opacity-80 uppercase tracking-widest">Pattern Interrupt</span>
                     </div>
                     <p className="text-2xl md:text-3xl font-medium leading-[1.3] opacity-90 tracking-tight">
                         Kōdo watches how you think — not just what you answer. Before it helps, it names the pattern. Rushed? Skipping edge cases? Avoiding recursion? It calls it out before it lets you repeat it.
@@ -61,10 +61,10 @@ const cards = [
                         { n: "3", t: "Break the loop" },
                     ].map((itm) => (
                         <li key={itm.n} className="flex items-center gap-4">
-                            <span className="w-6 h-6 rounded-full bg-[#3D1515] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
+                            <span className="w-6 h-6 rounded-full bg-[#3D1515] text-[#EFEDE3] flex items-center justify-center text-[10px] font-bold shrink-0">
                                 {itm.n}
                             </span>
-                            <span className="text-sm font-medium opacity-90">{itm.t}</span>
+                            <span className="text-sm font-medium opacity-70 uppercase tracking-tighter">{itm.t}</span>
                         </li>
                     ))}
                 </ul>
@@ -81,7 +81,7 @@ const cards = [
                 <div className="mb-12">
                     <div className="flex items-center gap-2 mb-6 opacity-60">
                         <span className="w-1 h-1 rounded-full border border-current bg-transparent"></span>
-                        <span className="text-sm font-medium">Adaptive Explanation.</span>
+                        <span className="text-sm font-medium uppercase tracking-widest">Adaptive Explanation</span>
                     </div>
                     <p className="text-2xl md:text-3xl font-medium leading-[1.3] opacity-90 tracking-tight">
                         Kōdo remembers which analogy made arrays click for you last Tuesday. It never explains the same concept the same way twice — it explains it the way that worked for you, refined.
@@ -97,7 +97,7 @@ const cards = [
                             <span className="w-6 h-6 rounded-full bg-white text-[#3D1515] flex items-center justify-center text-[10px] font-bold shrink-0">
                                 {itm.n}
                             </span>
-                            <span className="text-sm font-medium opacity-90">{itm.t}</span>
+                            <span className="text-sm font-medium opacity-70 uppercase tracking-tighter">{itm.t}</span>
                         </li>
                     ))}
                 </ul>
@@ -126,7 +126,7 @@ const cards = [
                                 <span className="w-6 h-6 rounded-full border border-current flex items-center justify-center text-[10px] font-bold shrink-0">
                                     {itm.n}
                                 </span>
-                                <span className="text-sm font-medium">{itm.t}</span>
+                                <span className="text-sm font-medium uppercase tracking-tighter">{itm.t}</span>
                             </li>
                         ))}
                     </ul>
@@ -140,8 +140,8 @@ export default function AccordionSection() {
     const [activeId, setActiveId] = useState(2);
 
     return (
-        <section className="w-full h-screen bg-[#3D1515] py-2 px-2 overflow-hidden">
-            <div className="w-full h-full flex rounded-3xl overflow-hidden shadow-2xl relative">
+        <section id="process" className="w-full h-screen bg-[#3D1515] py-2 px-2 overflow-hidden border-t border-white/5">
+            <div className="w-full h-full flex rounded-3xl overflow-hidden shadow-2xl relative bg-[#3D1515]">
                 {cards.map((card) => {
                     const isActive = card.id === activeId;
                     return (
@@ -149,21 +149,21 @@ export default function AccordionSection() {
                             key={card.id}
                             onClick={() => setActiveId(card.id)}
                             className={clsx(
-                                "group relative h-full flex-shrink-0 cursor-pointer overflow-hidden transition-all duration-[800ms] ease-in-out",
+                                "group relative h-full flex-shrink-0 cursor-pointer overflow-hidden transition-all duration-[800ms] cubic-bezier(0.4, 0, 0.2, 1) will-change-[flex]",
                                 card.bgColor,
                                 card.textColor,
                                 isActive ? "flex-[6]" : "flex-1 hover:flex-[1.2]"
                             )}
                         >
-                            {/* Optional Background Image */}
+                            {/* Background Image */}
                             {card.image && (
                                 <div className="absolute inset-0 w-full h-full">
                                     <Image
                                         src={card.image}
-                                        alt="Background placeholder"
+                                        alt="Background"
                                         fill
                                         className={clsx(
-                                            "object-cover object-center transition-all duration-1000",
+                                            "object-cover object-center transition-transform duration-1000",
                                             isActive ? "scale-100 grayscale-0" : "scale-110 grayscale"
                                         )}
                                     />
@@ -171,7 +171,7 @@ export default function AccordionSection() {
                                 </div>
                             )}
 
-                            {/* Content Container (only visible when active) */}
+                            {/* Content Container */}
                             <div
                                 className={clsx(
                                     "absolute inset-0 h-full w-full flex items-center transition-opacity duration-300 delay-300",
@@ -181,19 +181,24 @@ export default function AccordionSection() {
                                 {isActive && card.content}
                             </div>
 
-                            {/* Large Number */}
+                            {/* GPU Optimized Numbers */}
                             <div
                                 className={clsx(
-                                    "absolute bottom-0 w-full transition-all duration-[800ms] ease-in-out",
+                                    "absolute bottom-0 w-full transition-all duration-[800ms] pointer-events-none select-none will-change-transform",
                                     isActive ? "right-[-10%] sm:right-[10%] opacity-100 translate-x-0" : "right-1/2 translate-x-1/2 opacity-70"
                                 )}
+                                style={{ transform: "translateY(15%)" }}
                             >
                                 <span
                                     className={clsx(
-                                        "block text-center font-display font-bold leading-none tracking-tighter transition-all duration-1000",
-                                        isActive ? "text-[25vh] sm:text-[35vh] text-right" : "text-[15vh] sm:text-[20vh]"
+                                        "block text-center font-display font-bold leading-none tracking-tighter transition-all duration-[800ms] origin-bottom",
+                                        isActive ? "text-right" : "text-center"
                                     )}
-                                    style={{ transform: "translateY(15%)" }}
+                                    style={{
+                                        fontSize: "25vh",
+                                        transform: isActive ? "scale(1.5)" : "scale(0.8)",
+                                        transitionProperty: "transform, opacity, right"
+                                    }}
                                 >
                                     {card.title}
                                 </span>

@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import clsx from "clsx";
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 const words = [
     "PATTERN RECOGNITION",
@@ -15,48 +14,46 @@ const words = [
 ];
 
 export default function AnimatedWords() {
-    const [index, setIndex] = useState(0);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setIndex((prev) => (prev + 1) % words.length);
-        }, 3000);
-        return () => clearInterval(interval);
+        if (!containerRef.current) return;
+
+        // Create a GSAP timeline that loops
+        const tl = gsap.timeline({ repeat: -1 });
+        const textElements = containerRef.current.children;
+
+        // Hide all initially except the first one (handled by CSS)
+        gsap.set(textElements, { y: 20, opacity: 0, position: "absolute", top: 0, left: 0 });
+
+        for (let i = 0; i < textElements.length; i++) {
+            tl.to(textElements[i], {
+                y: 0,
+                opacity: 1,
+                duration: 0.5,
+                ease: "back.out(1.7)"
+            })
+                .to(textElements[i], {
+                    y: -20,
+                    opacity: 0,
+                    duration: 0.5,
+                    delay: 1.5,
+                    ease: "power2.in"
+                });
+        }
+
+        return () => {
+            tl.kill();
+        };
     }, []);
 
-    const word = words[index];
-
     return (
-        <div className="relative h-6 text-[#EFEDE3] font-bold tracking-widest text-sm uppercase flex justify-end overflow-hidden">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={index}
-                    initial={{ y: 20, opacity: 0, filter: "blur(5px)" }}
-                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                    exit={{ y: -20, opacity: 0, filter: "blur(5px)" }}
-                    transition={{
-                        duration: 0.6,
-                        ease: [0.32, 0.72, 0, 1], // Custom cubic-bezier matching Aceternity layout flip
-                    }}
-                    className="whitespace-nowrap absolute right-0"
-                >
-                    {word.split("").map((char, i) => (
-                        <motion.span
-                            key={i}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                                delay: i * 0.03, // Stagger letter typing
-                                duration: 0.3,
-                                ease: "easeOut",
-                            }}
-                            className={clsx("inline-block", char === " " && "w-2")}
-                        >
-                            {char}
-                        </motion.span>
-                    ))}
-                </motion.div>
-            </AnimatePresence>
+        <div className="relative h-6 text-[#493035] font-bold tracking-widest text-sm uppercase" ref={containerRef}>
+            {words.map((word, i) => (
+                <span key={i} className="whitespace-nowrap">
+                    {word}
+                </span>
+            ))}
         </div>
     );
 }
