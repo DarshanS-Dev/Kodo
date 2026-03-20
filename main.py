@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import json
 import memory,llm
 
 app = FastAPI()
@@ -19,6 +20,16 @@ class UserQuery(BaseModel):
     user_id:str
     query:str
 
+class ProblemSubmission(BaseModel):
+    user_id:str
+    problem_id:str
+    code:str
+    passed:bool
+    attempts:int
+
+with open("problems.json") as f:
+    problems = json.load(f)
+
 @app.post('/session/start')
 def comeback_brief(data :SessionStart):
     user_id = data.user_id
@@ -33,13 +44,27 @@ def chat_with_kodo(message: UserQuery):
     memory.retain(message.user_id, response)
     return response 
 
-@app.get('/test_hindsight')
-def test_():
-    memory.retain(userid="Arjun",content="arjun struggles a lot with recursion")
-    result = memory.reflect(userid="Arjun",query="What arjun struggles with ?")
-    return result
+@app.get('/problem/list')
+def get_problems():
+    return [{"id":p["id"], "title":p["title"], "difficulty":p["difficulty"], "tags":p["tags"]} for p in problems]
 
-@app.get('/test_llm')
-def test_llm():
-    result = llm.chat("Act as a coding mentor","what is recursion ?")
-    return result
+@app.get('/problem/{problem_id}')
+def get_problem_by_id(problem_id: str):
+    for problem in problems:
+        if problem["id"] == problem_id:
+            return problem
+    return {"error": "problem not found"}
+     
+@app.post('/problem/submit')
+def submit_problem(submission: ProblemSubmission):
+    for problem in problems:
+        if problem["id"] == submission.problem_id:
+            response = llm.chat(system_prompt="you are a coding behavior analyst, analyze this attempt and summarize the behavioral signals in 3-4 sentences",user_query=f"{problem}{submission}")
+            memory.retain(userid=submission.user_id, content=response)
+            return {"status": "stored", "feedback": response}
+
+@app.get('/insight/weekly')
+def get_weekly_summary(user_id: str):
+    prompt = "Analyze this user's learning patterns from the past week. What new concepts did they learn? What problems are still pending or unfinished? What topics from previous weeks haven't been revised in a while and are at risk of being forgotten? Have there been any improvements in their problem solving behavior compared to before?"
+    weekly_summary = memory.reflect(user_id, prompt, budget="high")
+    return weekly_summary
