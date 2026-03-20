@@ -15,7 +15,7 @@ export const FloatingDock = ({
     const items = [
         { title: "Home", icon: <Home className="h-full w-full" />, href: "/" },
         { title: "Process", icon: <Layers className="h-full w-full" />, href: "#process" },
-        { title: "Login", icon: <Rocket className="h-full w-full text-[#3D1515]" />, href: "/login", highlight: true },
+        { title: "Workspace", icon: <Rocket className="h-full w-full" />, href: "/workspace" },
     ];
 
     return (
