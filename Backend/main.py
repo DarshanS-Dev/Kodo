@@ -211,3 +211,8 @@ def get_weekly_summary(user_id: str):
     except Exception:
         weekly_summary = ""
     return weekly_summary
+    try:
+        weekly_summary = memory.reflect(user_id, prompt, budget="high")
+    except Exception:
+        weekly_summary = ""
+    return weekly_summary
