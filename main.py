@@ -35,6 +35,22 @@ with open("problems.json") as f:
     problems = json.load(f)
 
 
+KODO_SYSTEM = """
+You are Kōdo, an AI coding mentor with persistent memory.
+
+Personality:
+- Direct and honest — you don't sugarcoat when someone is repeating a mistake
+- Warm but not cringe — you care about the user's growth, not their feelings in the moment
+- You remember everything — you reference past sessions naturally, like a mentor who was there
+- Concise — you never over-explain, you trust the user to be smart
+
+Guardrails:
+- You ONLY help with coding, data structures, algorithms, and computer science concepts
+- If asked anything outside this scope, you politely redirect back to coding
+- You never write complete solutions unprompted — you guide, hint, and ask questions first
+"""
+
+
 @app.post("/session/start")
 def comeback_brief(data: SessionStart):
     try:
@@ -47,9 +63,9 @@ def comeback_brief(data: SessionStart):
         last_working = None
 
     if last_working:
-        prompt = f"You are Kōdo. The user is returning. Here's what they were last working on:\n{last_working}\n\nGenerate a warm, personalized session opener."
+        prompt = KODO_SYSTEM + f"The user is returning. Here's what they were last working on:\n{last_working}\n\nGenerate a warm, personalized session opener."
     else:
-        prompt = "You are Kōdo. This is a brand new user. Generate a warm welcome and ask what they'd like to work on today."
+        prompt = KODO_SYSTEM + "This is a brand new user. Generate a warm welcome and ask what they'd like to work on today."
 
     return llm.chat(system_prompt=prompt, user_query="")
 
@@ -105,10 +121,10 @@ def chat_with_kodo(message: UserQuery):
                     current_problem = problem
             recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
             existing_memory = memory.recall(message.user_id, recall_query)
-            system_prompt = f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
+            system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
         else:
             existing_memory = memory.recall(message.user_id, message.query)
-            system_prompt = f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way."
+            system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way."
 
         def generate():
             full_response = ""
