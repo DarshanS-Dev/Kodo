@@ -74,7 +74,6 @@ interface TestResult {
 
 const API = "http://localhost:8000";
 
-// Derived once on the client — never on the server
 function getOrCreateUserId(): string {
   const existing = localStorage.getItem("kodo_user_id");
   if (existing) return existing;
@@ -117,15 +116,11 @@ function loadPyodide(): Promise<any> {
 
 // ─── Helpers for test runner ──────────────────────────────────────────────────
 
-// Extract the top-level function name from user code e.g. "def fib(n):" -> "fib"
 function extractFunctionName(code: string): string | null {
   const match = code.match(/^def\s+(\w+)\s*\(/m);
   return match ? match[1] : null;
 }
 
-// Parse test input string into comma-separated Python args
-// "5" -> "5"
-// "[-1,0,3,5,9,12] 9" -> "[-1,0,3,5,9,12], 9"
 function parseTestInput(raw: string): string {
   const trimmed = raw.trim();
   const args: string[] = [];
@@ -164,7 +159,6 @@ sys.stdout = io.StringIO()
 sys.stderr = io.StringIO()
 `);
       const args = parseTestInput(tc.input);
-      // Define function, call it, print result
       const runnable = fnName
         ? `${code}\nprint(${fnName}(${args}))`
         : code;
@@ -172,14 +166,14 @@ sys.stderr = io.StringIO()
       const stdout = py.runPython("sys.stdout.getvalue()").trim();
       results.push({
         input: tc.input,
-        expected: tc.expected,
+        expected: tc.output,       // ← fixed: was tc.expected
         actual: stdout,
-        passed: stdout === tc.expected,
+        passed: stdout === tc.output, // ← fixed: was tc.expected
       });
     } catch (err: any) {
       results.push({
         input: tc.input,
-        expected: tc.expected,
+        expected: tc.output,       // ← fixed: was tc.expected
         actual: `ERROR: ${err.message}`,
         passed: false,
       });
@@ -307,7 +301,6 @@ function ChatBubble({
           )}
         </div>
 
-        {/* Problem card attached to message */}
         {msg.action?.type === "open_problem" && msg.problemCard && (
           <ProblemCard
             item={msg.problemCard}
@@ -466,18 +459,14 @@ function WeeklyInsightModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
-  // ── userId — evaluated on client only, never during SSR ──
-  // Initialised to "" so session/start waits until the real ID is known
   const [userId, setUserId] = useState<string>("");
   useEffect(() => { setUserId(getOrCreateUserId()); }, []);
 
-  // ── Chat state ──
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  // ── IDE state ──
   const [ideOpen, setIdeOpen] = useState(false);
   const [activeProblem, setActiveProblem] = useState<Problem | null>(null);
   const [code, setCode] = useState("");
@@ -488,23 +477,19 @@ export default function WorkspacePage() {
   const [problemDescOpen, setProblemDescOpen] = useState(true);
   const [attempts, setAttempts] = useState(0);
 
-  // ── UI state ──
   const [showInsight, setShowInsight] = useState(false);
   const [pyodideReady, setPyodideReady] = useState(false);
 
-  // ── Scroll chat to bottom ──
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Preload Pyodide silently ──
   useEffect(() => {
     loadPyodide().then(() => setPyodideReady(true));
   }, []);
 
-  // ── Session start — waits for real userId before firing ──────────────────
   useEffect(() => {
-    if (!userId) return; // userId still initialising, wait for next render
+    if (!userId) return;
     const startSession = async () => {
       const greetId = `kodo_${Date.now()}`;
       setMessages([
@@ -523,7 +508,6 @@ export default function WorkspacePage() {
           body: JSON.stringify({ user_id: userId }),
         });
         const text = await res.text();
-        // /session/start returns a plain string
         const greeting = text.startsWith('"') ? JSON.parse(text) : text;
         setMessages([
           {
@@ -548,9 +532,8 @@ export default function WorkspacePage() {
 
     startSession();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]); // fires once when userId is resolved from localStorage
+  }, [userId]);
 
-  // ── Open a problem in the IDE ──────────────────────────────────────────────
   const openProblem = useCallback(async (problemId: string) => {
     try {
       const res = await fetch(`${API}/problem/${problemId}`);
@@ -563,11 +546,10 @@ export default function WorkspacePage() {
       setIdeOpen(true);
       setProblemDescOpen(true);
     } catch {
-      // silently fail — chat will still be usable
+      // silently fail
     }
   }, []);
 
-  // ── Fetch problem card — uses /problem/{id} directly, no full list needed ─
   const fetchProblemCard = useCallback(
     async (problemId: string): Promise<ProblemListItem | null> => {
       try {
@@ -582,7 +564,6 @@ export default function WorkspacePage() {
     []
   );
 
-  // ── Send chat message ──────────────────────────────────────────────────────
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || chatLoading) return;
@@ -604,7 +585,6 @@ export default function WorkspacePage() {
         query: trimmed,
       };
 
-      // If user is currently in an IDE session, include context
       if (ideOpen && activeProblem) {
         payload.problem_id = activeProblem.id;
         payload.current_code = code;
@@ -618,7 +598,6 @@ export default function WorkspacePage() {
 
       const contentType = res.headers.get("content-type") ?? "";
 
-      // ── Case A: JSON response (contains action) ────────────────────────
       if (contentType.includes("application/json")) {
         const data = await res.json();
 
@@ -638,10 +617,7 @@ export default function WorkspacePage() {
             problemCard,
           },
         ]);
-      }
-      // ── Case B: Streaming text/plain ───────────────────────────────────
-      else {
-        // Add a streaming placeholder
+      } else {
         setMessages((prev) => [
           ...prev,
           { id: kodoMsgId, role: "kodo", content: "", streaming: true },
@@ -665,7 +641,6 @@ export default function WorkspacePage() {
           );
         }
 
-        // Mark streaming done
         setMessages((prev) =>
           prev.map((m) =>
             m.id === kodoMsgId ? { ...m, streaming: false } : m
@@ -687,7 +662,6 @@ export default function WorkspacePage() {
     }
   }, [input, chatLoading, ideOpen, activeProblem, code, userId, fetchProblemCard]);
 
-  // ── Run code (stdout) ──────────────────────────────────────────────────────
   const runCode = useCallback(async () => {
     if (!pyodideReady) {
       setConsoleOutput(["Pyodide is still loading, please wait..."]);
@@ -701,7 +675,6 @@ export default function WorkspacePage() {
     setIsRunning(false);
   }, [code, pyodideReady]);
 
-  // ── Submit code ────────────────────────────────────────────────────────────
   const submitCode = useCallback(async () => {
     if (!activeProblem || !pyodideReady) return;
     setIsSubmitting(true);
@@ -709,7 +682,6 @@ export default function WorkspacePage() {
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
 
-    // 1. Run locally against test cases
     const results = await runAgainstTestCases(
       code,
       activeProblem.test_cases
@@ -718,7 +690,6 @@ export default function WorkspacePage() {
 
     const passed = results.every((r) => r.passed);
 
-    // 2. Report to backend (backend stores behavioral analysis in memory)
     try {
       const res = await fetch(`${API}/problem/submit`, {
         method: "POST",
@@ -733,7 +704,6 @@ export default function WorkspacePage() {
       });
       const data = await res.json();
 
-      // 3. Show Kōdo's feedback in the chat
       const feedbackId = `kodo_submit_${Date.now()}`;
       const emoji = passed ? "✓" : "✗";
       const intro = passed
@@ -755,7 +725,6 @@ export default function WorkspacePage() {
     setIsSubmitting(false);
   }, [activeProblem, code, attempts, pyodideReady, userId]);
 
-  // ── Key handler for chat input ─────────────────────────────────────────────
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -766,7 +735,6 @@ export default function WorkspacePage() {
     [sendMessage]
   );
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 bg-[#2a0f0f] flex overflow-hidden font-sans pt-0">
 
@@ -777,7 +745,6 @@ export default function WorkspacePage() {
         className="relative flex flex-col h-full bg-[#1e0909] border-r border-white/8 shrink-0"
         style={{ minWidth: ideOpen ? "320px" : undefined }}
       >
-        {/* Chat header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
           <div className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full bg-[#EFEDE3] shadow-[0_0_10px_rgba(239,237,227,0.9)] animate-pulse" />
@@ -814,7 +781,6 @@ export default function WorkspacePage() {
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10">
           {messages.map((msg) => (
             <ChatBubble
@@ -826,7 +792,6 @@ export default function WorkspacePage() {
           <div ref={chatBottomRef} />
         </div>
 
-        {/* Input */}
         <div className="px-4 pb-5 pt-3 border-t border-white/8">
           {ideOpen && activeProblem && (
             <div className="flex items-center gap-1.5 mb-2 px-1">
@@ -877,7 +842,6 @@ export default function WorkspacePage() {
             transition={{ duration: 0.4, ease: [0.32, 0, 0.67, 0] }}
             className="flex-1 flex flex-col h-full bg-[#0d0404] overflow-hidden"
           >
-            {/* IDE header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/8 bg-[#1a0808] shrink-0">
               <div className="flex items-center gap-3">
                 <span className="text-[#EFEDE3] font-semibold text-sm">
@@ -912,10 +876,8 @@ export default function WorkspacePage() {
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-              {/* Left: problem desc + editor stacked */}
               <div className="flex-1 flex flex-col overflow-hidden">
 
-                {/* Problem description (collapsible) */}
                 <div
                   className={`border-b border-white/8 bg-[#120606] transition-all duration-300 overflow-hidden ${
                     problemDescOpen ? "max-h-64" : "max-h-10"
@@ -964,7 +926,6 @@ export default function WorkspacePage() {
                   )}
                 </div>
 
-                {/* Monaco editor */}
                 <div className="flex-1 relative overflow-hidden">
                   <MonacoEditor
                     height="100%"
@@ -984,7 +945,6 @@ export default function WorkspacePage() {
                     }}
                   />
 
-                  {/* Test results overlay */}
                   <AnimatePresence>
                     {testResults && (
                       <TestResultsPanel
@@ -995,7 +955,6 @@ export default function WorkspacePage() {
                   </AnimatePresence>
                 </div>
 
-                {/* Console output */}
                 <div className="h-32 border-t border-white/8 bg-[#080202] flex flex-col shrink-0">
                   <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
                     <span className="text-[10px] font-mono text-[#EFEDE3]/30 uppercase tracking-widest">
@@ -1027,7 +986,6 @@ export default function WorkspacePage() {
                 </div>
               </div>
 
-              {/* Right sidebar: action buttons */}
               <div className="w-14 flex flex-col items-center py-4 gap-3 border-l border-white/8 bg-[#120606] shrink-0">
                 <button
                   onClick={runCode}
