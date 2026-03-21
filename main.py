@@ -101,12 +101,18 @@ def chat_with_kodo(message: UserQuery):
             topic = intent_data['topic']
         
         else:
-            topic = memory.reflect(userid=message.user_id, query="Based on this user's learning history, weak areas, and recent struggles, what single coding topic should they practice next? Reply with ONLY one of these exact tags: recursion, dp, linked-list, pointers, stack, strings, binary-search, arrays, graphs, bfs, dfs")
-
-        solved = memory.reflect(
-            userid=message.user_id,
-            query="List all the problem IDs the user has already attempted. Return ONLY a comma separated list of IDs like: p001,p003,p005"
-        )    
+            try:
+                topic = memory.reflect(userid=message.user_id, query="Based on this user's learning history, weak areas, and recent struggles, what single coding topic should they practice next? Reply with ONLY one of these exact tags: recursion, dp, linked-list, pointers, stack, strings, binary-search, arrays, graphs, bfs, dfs")
+            except Exception:
+                topic = ""
+                
+        try:
+            solved = memory.reflect(
+                userid=message.user_id,
+                query="List all the problem IDs the user has already attempted. Return ONLY a comma separated list of IDs like: p001,p003,p005"
+            )    
+        except Exception:
+            solved = ""
 
         solved_ids = [p.strip() for p in solved.split(",")]
 
@@ -136,13 +142,19 @@ def chat_with_kodo(message: UserQuery):
 
             if current_problem :
                 recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
-                existing_memory = memory.recall(message.user_id, recall_query)
+                try:
+                    existing_memory = memory.recall(message.user_id, recall_query)
+                except Exception:
+                    existing_memory = ""
                 system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
 
             else:
                 return {"message": "Problem not found", "action": None}        
         else:
-            existing_memory = memory.recall(message.user_id, message.query)
+            try:
+                existing_memory = memory.recall(message.user_id, message.query)
+            except Exception:
+                existing_memory = ""
             system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way."
 
         def generate():
@@ -194,5 +206,8 @@ def submit_problem(submission: ProblemSubmission):
 @app.get("/insight/weekly")
 def get_weekly_summary(user_id: str):
     prompt = "Analyze this user's learning patterns from the past week. What new concepts did they learn? What problems are still pending or unfinished? What topics from previous weeks haven't been revised in a while and are at risk of being forgotten? Have there been any improvements in their problem solving behavior compared to before?"
-    weekly_summary = memory.reflect(user_id, prompt, budget="high")
+    try:
+        weekly_summary = memory.reflect(user_id, prompt, budget="high")
+    except Exception:
+        weekly_summary = ""
     return weekly_summary
