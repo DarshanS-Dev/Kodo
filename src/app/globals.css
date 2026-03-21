@@ -19,3 +19,22 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Global scrollbar refinement */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(61, 21, 21, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 21, 21, 0.2);
+}

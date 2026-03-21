@@ -2,7 +2,7 @@
 import React, { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Home, Terminal } from "lucide-react";
+import { Home, Terminal, BarChart3, Settings } from "lucide-react";
 import Link from "next/link";
 
 export const FloatingDock = ({
@@ -15,6 +15,8 @@ export const FloatingDock = ({
     const items = [
         { title: "Home", icon: <Home className="h-full w-full" />, href: "/" },
         { title: "Workspace", icon: <Terminal className="h-full w-full" />, href: "/workspace" },
+        { title: "Insight", icon: <BarChart3 className="h-full w-full" />, href: "/insight" },
+      
     ];
 
     return (

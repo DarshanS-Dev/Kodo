@@ -60,10 +60,67 @@ export default function RevealHero() {
                     initial={{ rotate: 10, x: -20, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.6, duration: 1 }}
-                    className="absolute top-[40%] left-[5%] w-72 h-[450px] rounded-3xl overflow-hidden pointer-events-auto shadow-2xl"
+                    className="absolute top-[40%] left-[5%] w-72 h-[450px] rounded-3xl overflow-hidden pointer-events-auto shadow-2xl group border border-white/10"
                 >
                     <FloatingAnimation type={2} />
-                    <div className="absolute bottom-4 left-4 p-4 text-[10px] font-bold text-[#EFEDE3] uppercase tracking-widest bg-[#3D1515]/90 rounded-lg">
+
+                    {/* High-Impact Scanning Overlay */}
+                    <div className="absolute inset-0 z-20 pointer-events-none">
+                        {/* Scanning Line with Flicker */}
+                        <motion.div
+                            animate={{ 
+                                top: ["-10%", "110%"],
+                                opacity: [0.4, 0.9, 0.4],
+                            }}
+                            transition={{
+                                duration: 2.2,
+                                repeat: Infinity,
+                                ease: "linear",
+                            }}
+                            className="absolute left-0 w-full h-[60px] bg-gradient-to-b from-transparent via-white/30 to-transparent flex items-center justify-center"
+                        >
+                            <div className="w-full h-[1px] bg-white shadow-[0_0_25px_white]" />
+                        </motion.div>
+
+                        {/* Floating Data Fragments */}
+                        {Array.from({ length: 15 }).map((_, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ 
+                                    x: Math.random() * 240 - 120, 
+                                    y: Math.random() * 450,
+                                    opacity: 0,
+                                    scale: 0.5
+                                }}
+                                animate={{ 
+                                    y: [null, Math.random() * -120 - 60],
+                                    opacity: [0, 0.8, 0],
+                                    scale: [0.6, 1.1, 0.6]
+                                }}
+                                transition={{
+                                    duration: 2.5 + Math.random() * 3,
+                                    repeat: Infinity,
+                                    delay: Math.random() * 4,
+                                    ease: "linear"
+                                }}
+                                className="absolute left-1/2 -translate-x-1/2 p-1 text-[9px] font-mono text-white/50 whitespace-nowrap"
+                            >
+                                {i % 3 === 0 ? ">>> INDUCT" : i % 3 === 1 ? "01101" : "MATCH++"}
+                            </motion.div>
+                        ))}
+
+                        {/* Pulsing Status Badge */}
+                        <div className="absolute top-6 left-6 flex items-center gap-2">
+                             <motion.div 
+                                animate={{ opacity: [0.2, 1, 0.2] }}
+                                transition={{ duration: 1, repeat: Infinity }}
+                                className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" 
+                             />
+                             <span className="text-[8px] font-bold text-[#EFEDE3]/60 tracking-[0.2em] uppercase">Induction Active</span>
+                        </div>
+                    </div>
+
+                    <div className="absolute bottom-4 left-4 p-4 text-[10px] font-bold text-[#EFEDE3] uppercase tracking-widest bg-[#3D1515]/90 rounded-lg backdrop-blur-md border border-[#EFEDE3]/10 z-30">
                         Pattern Induction
                     </div>
                 </motion.div>

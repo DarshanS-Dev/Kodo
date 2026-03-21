@@ -3,6 +3,7 @@ import React, { useRef, Suspense, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Sphere, MeshDistortMaterial, Points, PointMaterial, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
+import { cn } from "@/lib/utils";
 
 const SphereNode = () => {
     return (
@@ -44,11 +45,50 @@ const PointsNode = () => {
     );
 };
 
-export function FloatingAnimation({ type }: { type: 1 | 2 | 3 | 4 }) {
-    const [dpr, setDpr] = React.useState(1.5);
+const LightPointsNode = () => {
+    const pointsRef = useRef<THREE.Points>(null);
+    const particlesCount = 400;
+    
+    const positions = useMemo(() => {
+        const p = new Float32Array(particlesCount * 3);
+        for (let i = 0; i < particlesCount; i++) {
+            p[i * 3] = (Math.random() - 0.5) * 5;
+            p[i * 3 + 1] = (Math.random() - 0.5) * 5;
+            p[i * 3 + 2] = (Math.random() - 0.5) * 5;
+        }
+        return p;
+    }, []);
+
+    useFrame((state) => {
+        if (!pointsRef.current) return;
+        const time = state.clock.getElapsedTime();
+        pointsRef.current.rotation.y = time * 0.15;
+        pointsRef.current.rotation.x = Math.sin(time * 0.1) * 0.2;
+    });
 
     return (
-        <div className="w-full h-full min-h-[250px] rounded-2xl overflow-hidden bg-black/5 backdrop-blur-sm border border-white/5">
+        <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
+            <PointMaterial
+                transparent
+                color="#FFFFFF"
+                size={0.06}
+                sizeAttenuation={true}
+                depthWrite={false}
+                opacity={0.8}
+            />
+        </Points>
+    );
+};
+
+export function FloatingAnimation({ type }: { type: 1 | 2 | 3 | 4 }) {
+    const [dpr, setDpr] = React.useState(1.5);
+    const isLighterCard = type === 2;
+
+    return (
+        <div className={cn(
+            "w-full h-full min-h-[250px] rounded-2xl overflow-hidden backdrop-blur-sm border",
+            isLighterCard ? "bg-white/10 border-white/20" : "bg-black/5 border-white/5"
+        )}>
             <Canvas
                 shadows={false}
                 dpr={dpr}
@@ -56,8 +96,8 @@ export function FloatingAnimation({ type }: { type: 1 | 2 | 3 | 4 }) {
                 gl={{ antialias: false, powerPreference: "high-performance" }}
             >
                 <PerformanceMonitor onDecline={() => setDpr(1)} />
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} />
+                <ambientLight intensity={isLighterCard ? 0.7 : 0.5} />
+                <pointLight position={[10, 10, 10]} intensity={isLighterCard ? 1.5 : 1} />
                 <Suspense fallback={null}>
                     {type === 1 && <SphereNode />}
                     {type === 2 && <PointsNode />}

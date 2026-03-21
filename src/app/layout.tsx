@@ -5,7 +5,7 @@ import SmoothScroll from "@/components/layout/SmoothScroll";
 import Navbar from "@/components/layout/Navbar";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,8 +18,8 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "Master Web Animations",
-  description: "The ultimate guide to web animations.",
+  title: "Kōdo — AI Coding Mentor",
+  description: "The only mentor that remembers how you think, not just what you coded.",
 };
 
 export default function RootLayout({
