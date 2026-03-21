@@ -47,28 +47,57 @@ def comeback_brief(data: SessionStart):
 
 @app.post("/chat")
 def chat_with_kodo(message: UserQuery):
-    if message.problem_id:
+    intent = llm.chat(
+        system_prompt='Reply with ONLY valid JSON, no markdown, no backticks: {"wants_problem": true or false, "topic": "topic name or null"}',
+        user_query=message.query
+    )
+
+    intent_data = json.loads(intent)
+
+    if not intent_data['wants_problem']:
+        suggest_data = json.loads(memory.reflect(userid=message.user_id, query="Based on this user's recent activity and learning patterns, should I suggest a coding problem right now? Reply with ONLY valid JSON: {\"suggest\": true or false}"))
+        intent_data['wants_problem'] = suggest_data['suggest']
+
+    if intent_data['wants_problem'] :
+        if intent_data['topic'] :
+            topic = intent_data['topic']
+        
+        else:
+            topic = memory.reflect(userid=message.user_id, query="Based on this user's learning history, weak areas, and recent struggles, what single coding topic should they practice next? Reply with ONLY the topic name, nothing else. Example: 'dynamic-programming' or 'graphs' or 'recursion'")
+            
         for problem in problems:
-            if problem["id"] == message.problem_id:
-                current_problem = problem
-        recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
-        existing_memory = memory.recall(message.user_id, recall_query)
-        system_prompt = f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
+            if topic in problem['tags']:
+                return {
+                            "message": f"Sure! Here's a {topic} problem for you. Let's go! 💪",
+                            "action": {
+                                "type": "open_problem",
+                                "problem_id": problem['id']
+                            }
+                        }
+
     else:
-        existing_memory = memory.recall(message.user_id, message.query)
-        system_prompt = f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way."
+        if message.problem_id:
+            for problem in problems:
+                if problem["id"] == message.problem_id:
+                    current_problem = problem
+            recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
+            existing_memory = memory.recall(message.user_id, recall_query)
+            system_prompt = f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
+        else:
+            existing_memory = memory.recall(message.user_id, message.query)
+            system_prompt = f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way."
 
-    def generate():
-        full_response = ""
-        for chunk in llm.stream(system_prompt, message.query):
-            full_response += chunk
-            yield chunk
-        memory.retain(
-            message.user_id,
-            f"User asked: {message.query}\nKōdo responded: {full_response}",
-        )
+        def generate():
+            full_response = ""
+            for chunk in llm.stream(system_prompt, message.query):
+                full_response += chunk
+                yield chunk
+            memory.retain(
+                message.user_id,
+                f"User asked: {message.query}\nKōdo responded: {full_response}",
+            )
 
-    return StreamingResponse(generate(), media_type="text/plain")
+        return StreamingResponse(generate(), media_type="text/plain")
 
 
 @app.get("/problem/list")
