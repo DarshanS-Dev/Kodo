@@ -73,7 +73,7 @@ def comeback_brief(data: SessionStart):
 @app.post("/chat")
 def chat_with_kodo(message: UserQuery):
     intent = llm.chat(
-        system_prompt='Reply with ONLY valid JSON, no markdown, no backticks: {"wants_problem": true or false, "topic": "topic name or null"}',
+        system_prompt='Reply with ONLY valid JSON, no markdown, no backticks: {"wants_problem": true or false, "topic": "topic name or null"}. Valid topics are: recursion, dp, linked-list, pointers, stack, strings, binary-search, arrays, graphs, bfs, dfs',
         user_query=message.query
     )
 
@@ -101,10 +101,17 @@ def chat_with_kodo(message: UserQuery):
             topic = intent_data['topic']
         
         else:
-            topic = memory.reflect(userid=message.user_id, query="Based on this user's learning history, weak areas, and recent struggles, what single coding topic should they practice next? Reply with ONLY the topic name, nothing else. Example: 'dynamic-programming' or 'graphs' or 'recursion'")
-            
+            topic = memory.reflect(userid=message.user_id, query="Based on this user's learning history, weak areas, and recent struggles, what single coding topic should they practice next? Reply with ONLY one of these exact tags: recursion, dp, linked-list, pointers, stack, strings, binary-search, arrays, graphs, bfs, dfs")
+
+        solved = memory.reflect(
+            userid=message.user_id,
+            query="List all the problem IDs the user has already attempted. Return ONLY a comma separated list of IDs like: p001,p003,p005"
+        )    
+
+        solved_ids = [p.strip() for p in solved.split(",")]
+
         for problem in problems:
-            if topic in problem['tags']:
+            if topic in problem['tags'] and problem['id'] not in solved_ids:
                 return {
                             "message": f"Sure! Here's a {topic} problem for you. Let's go! 💪",
                             "action": {
@@ -113,15 +120,27 @@ def chat_with_kodo(message: UserQuery):
                             }
                         }    
         
+        return {
+            "message": "I wanted to give you a problem but I don't have one on that topic yet. What else can I help with?",
+            "action": None
+        }
 
     else:
         if message.problem_id:
+            current_problem = None
+
             for problem in problems:
                 if problem["id"] == message.problem_id:
                     current_problem = problem
-            recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
-            existing_memory = memory.recall(message.user_id, recall_query)
-            system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
+                    break
+
+            if current_problem :
+                recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
+                existing_memory = memory.recall(message.user_id, recall_query)
+                system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
+
+            else:
+                return {"message": "Problem not found", "action": None}        
         else:
             existing_memory = memory.recall(message.user_id, message.query)
             system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way."
@@ -168,7 +187,7 @@ def submit_problem(submission: ProblemSubmission):
                 system_prompt="you are a coding behavior analyst, analyze this attempt and summarize the behavioral signals in 3-4 sentences",
                 user_query=f"{problem}{submission}",
             )
-            memory.retain(userid=submission.user_id, content=response)
+            memory.retain(userid=submission.user_id, content= f"User attempted problem ID {submission.problem_id} titled '{problem['title']}'. Result: {'passed' if submission.passed else 'failed'}." + response)
             return {"status": "stored", "feedback": response}
 
 
