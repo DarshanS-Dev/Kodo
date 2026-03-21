@@ -52,11 +52,24 @@ def chat_with_kodo(message: UserQuery):
         user_query=message.query
     )
 
-    intent_data = json.loads(intent)
+    try:
+        intent_data = json.loads(intent.strip().strip("```json").strip("```").strip())
+    except json.JSONDecodeError:
+        intent_data = {"wants_problem": False, "topic": None}
+    
 
     if not intent_data['wants_problem']:
-        suggest_data = json.loads(memory.reflect(userid=message.user_id, query="Based on this user's recent activity and learning patterns, should I suggest a coding problem right now? Reply with ONLY valid JSON: {\"suggest\": true or false}"))
-        intent_data['wants_problem'] = suggest_data['suggest']
+        try:
+            reflect_result = memory.reflect(
+                userid=message.user_id,
+                query='Based on this user\'s recent activity, should I suggest a coding problem? Reply with ONLY valid JSON: {"suggest": true or false}',
+                budget="mid"
+            )
+            suggest_data = json.loads(reflect_result.strip().strip("```json").strip("```").strip())
+            intent_data['wants_problem'] = suggest_data.get('suggest', False)
+        except (json.JSONDecodeError, Exception):
+            intent_data['wants_problem'] = False
+        
 
     if intent_data['wants_problem'] :
         if intent_data['topic'] :
@@ -73,7 +86,8 @@ def chat_with_kodo(message: UserQuery):
                                 "type": "open_problem",
                                 "problem_id": problem['id']
                             }
-                        }
+                        }    
+        
 
     else:
         if message.problem_id:
