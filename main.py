@@ -19,6 +19,8 @@ class SessionStart(BaseModel):
 class UserQuery(BaseModel):
     user_id:str
     query:str
+    problem_id:str | None = None
+    current_code:str | None = None
 
 class ProblemSubmission(BaseModel):
     user_id:str
@@ -39,10 +41,23 @@ def comeback_brief(data :SessionStart):
 
 @app.post('/chat')
 def chat_with_kodo(message: UserQuery):
-    existing_memory = memory.recall(message.user_id, message.query)
-    response = llm.chat(system_prompt=f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way.", user_query=message.query)
-    memory.retain(message.user_id, response)
-    return response 
+
+    if message.problem_id :
+        for problem in problems:
+            if problem['id'] == message.problem_id:
+                current_problem = problem
+
+        recall_query = f"user's history with {current_problem['tags']} problems and their common struggles"
+        exisiting_memory = memory.recall(message.user_id, recall_query)
+        response = llm.chat(system_prompt=f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}", user_query=message.query)
+        memory.retain(message.user_id, f"User asked: {message.query}\nKōdo responded: {response}")
+        return response
+
+    else:
+        existing_memory = memory.recall(message.user_id, message.query)
+        response = llm.chat(system_prompt=f"You are Kōdo, an AI coding mentor with memory.\n\nHere is what you remember about this user:\n{existing_memory}\n\nBased on this memory, respond in a personalized way.", user_query=message.query)
+        memory.retain(message.user_id, f"User asked: {message.query}\nKōdo responded: {response}")
+        return response 
 
 @app.get('/problem/list')
 def get_problems():
