@@ -76,22 +76,14 @@ export default function Hero() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    className="flex items-center gap-8"
+                    className="flex items-start gap-4 w-64 relative"
                 >
-                    <div className="flex items-start gap-4 w-64 relative">
-                        <div className="w-1.5 h-1.5 bg-[#EFEDE3] mt-2 rounded-full shadow-[0_0_12px_rgba(239,237,227,0.8)]"></div>
-                        <div className="flex flex-col">
-                            <p className="text-sm font-medium opacity-80 leading-snug mb-1">
-                                You will be master on:
-                            </p>
-                            <span className="font-bold tracking-widest text-sm uppercase text-[#EFEDE3]">ADAPTIVE EXPLANATIONS</span>
-                        </div>
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-4">
-                        <a href="/login" className="text-xs font-black tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity">Login</a>
-                        <a href="/workspace" className="text-xs font-black tracking-widest uppercase opacity-60 hover:opacity-100 transition-opacity">Workspace</a>
-                        <a href="/register" className="px-5 py-2.5 rounded-full border border-[#EFEDE3]/20 bg-[#EFEDE3] text-[#5C2020] text-xs font-black tracking-widest uppercase hover:bg-transparent hover:text-[#EFEDE3] transition-all duration-300">Join Kōdo</a>
+                    <div className="w-1.5 h-1.5 bg-[#EFEDE3] mt-2 rounded-full shadow-[0_0_12px_rgba(239,237,227,0.8)]"></div>
+                    <div className="flex flex-col">
+                        <p className="text-sm font-medium opacity-80 leading-snug mb-1">
+                            You will be master on:
+                        </p>
+                        <span className="font-bold tracking-widest text-sm uppercase text-[#EFEDE3]">ADAPTIVE EXPLANATIONS</span>
                     </div>
                 </motion.div>
             </div>
@@ -116,14 +108,14 @@ export default function Hero() {
                 </motion.div>
 
                 <div className="flex flex-col items-end gap-12">
-                    <a href="/login" className="group flex items-center gap-8 text-xs font-black tracking-[0.4em] uppercase">
+                    <button className="group flex items-center gap-8 text-xs font-black tracking-[0.4em] uppercase">
                         <span className="opacity-40 group-hover:opacity-100 transition-all duration-500">INITIATE GROWTH PROTOCOL</span>
                         <div className="w-14 h-14 rounded-full bg-transparent border border-[#EFEDE3]/20 flex items-center justify-center transition-all duration-700 group-hover:scale-125 group-hover:bg-[#EFEDE3] group-hover:border-[#EFEDE3] group-hover:shadow-[0_0_30px_rgba(239,237,227,0.3)]">
                             <svg width="18" height="18" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-all duration-500 group-hover:rotate-45">
                                 <path d="M1 5H13M13 5L9 1M13 5L9 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors group-hover:stroke-[#5C2020]" />
                             </svg>
                         </div>
-                    </a>
+                    </button>
 
                     <div className="flex flex-col items-end gap-3 pr-2 border-r border-[#EFEDE3]/20 h-10">
                         <p className="text-[10px] tracking-[0.3em] font-black opacity-30 uppercase">Cognitive Node</p>
