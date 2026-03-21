@@ -37,11 +37,20 @@ with open("problems.json") as f:
 
 @app.post("/session/start")
 def comeback_brief(data: SessionStart):
-    user_id = data.user_id
-    last_working = memory.reflect(
-        userid=user_id, query="What was the user last working on?", budget="mid"
-    )
-    prompt = f"You are Kōdo. The user is returning. Here's what they were last working on:\n{last_working}\n\nGenerate a warm, personalized session opener."
+    try:
+        last_working = memory.reflect(
+            userid=data.user_id,
+            query="What was the user last working on?",
+            budget="mid"
+        )
+    except Exception:
+        last_working = None
+
+    if last_working:
+        prompt = f"You are Kōdo. The user is returning. Here's what they were last working on:\n{last_working}\n\nGenerate a warm, personalized session opener."
+    else:
+        prompt = "You are Kōdo. This is a brand new user. Generate a warm welcome and ask what they'd like to work on today."
+
     return llm.chat(system_prompt=prompt, user_query="")
 
 
