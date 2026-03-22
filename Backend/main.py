@@ -73,7 +73,7 @@ def comeback_brief(data: SessionStart):
 @app.post("/chat")
 def chat_with_kodo(message: UserQuery):
     intent = llm.chat(
-        system_prompt='Reply with ONLY valid JSON, no markdown, no backticks: {"wants_problem": true or false, "topic": "topic name or null"}. Valid topics are: recursion, dp, linked-list, pointers, stack, strings, binary-search, arrays, graphs, bfs, dfs',
+        system_prompt='Reply with ONLY valid JSON, no markdown, no backticks: {"wants_problem": true or false, "topic": "topic name or null"}. Set wants_problem to true ONLY if the user explicitly asks to solve, practice, or attempt a coding problem. For general questions, doubts, greetings, or anything else set it to false. Valid topics are: recursion, dp, linked-list, pointers, stack, strings, binary-search, arrays, graphs, bfs, dfs',
         user_query=message.query
     )
 
@@ -83,17 +83,17 @@ def chat_with_kodo(message: UserQuery):
         intent_data = {"wants_problem": False, "topic": None}
     
 
-    if not intent_data['wants_problem']:
-        try:
-            reflect_result = memory.reflect(
-                userid=message.user_id,
-                query='Based on this user\'s recent activity, should I suggest a coding problem? Reply with ONLY valid JSON: {"suggest": true or false}',
-                budget="mid"
-            )
-            suggest_data = json.loads(reflect_result.strip().strip("```json").strip("```").strip())
-            intent_data['wants_problem'] = suggest_data.get('suggest', False)
-        except (json.JSONDecodeError, Exception):
-            intent_data['wants_problem'] = False
+    # if not intent_data['wants_problem']:
+    #     try:
+    #         reflect_result = memory.reflect(
+    #             userid=message.user_id,
+    #             query='Based on this user\'s recent activity, should I suggest a coding problem? Reply with ONLY valid JSON: {"suggest": true or false}',
+    #             budget="mid"
+    #         )
+    #         suggest_data = json.loads(reflect_result.strip().strip("```json").strip("```").strip())
+    #         intent_data['wants_problem'] = suggest_data.get('suggest', False)
+    #     except (json.JSONDecodeError, Exception):
+    #         intent_data['wants_problem'] = False
         
 
     if intent_data['wants_problem'] :
@@ -146,7 +146,7 @@ def chat_with_kodo(message: UserQuery):
                     existing_memory = memory.recall(message.user_id, recall_query)
                 except Exception:
                     existing_memory = ""
-                system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving:\n{json.dumps(current_problem)}\n\nHere is their current code:\n{message.current_code}"
+                system_prompt = KODO_SYSTEM + f"\n\nHere is what you remember about this user: {existing_memory}\n\nThe user is currently solving this problem:\n{json.dumps(current_problem)}\n\nHere is their current code — use it as context to understand where they are stuck, DO NOT repeat it back to them:\n{message.current_code}\n\nAnswer their question directly."
 
             else:
                 return {"message": "Problem not found", "action": None}        
