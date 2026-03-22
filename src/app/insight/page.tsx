@@ -14,7 +14,7 @@ import {
   Flame,
 } from "lucide-react";
 
-const API = "http://localhost:8000";
+const API = "https://kodo-yx1z.onrender.com";
 
 function getUserId(): string {
   if (typeof window === "undefined") return "user_dev";

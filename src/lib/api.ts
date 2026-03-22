@@ -1,6 +1,6 @@
 "use client";
 
-const BASE = "http://localhost:8000";
+const BASE = "https://kodo-yx1z.onrender.com";
 const USER_ID = "user_001";
 
 // Types
@@ -104,12 +104,12 @@ export async function submitProblem(
   const res = await fetch(`${BASE}/problem/submit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ 
-      user_id: USER_ID, 
-      problem_id: problemId, 
-      code, 
-      passed, 
-      attempts 
+    body: JSON.stringify({
+      user_id: USER_ID,
+      problem_id: problemId,
+      code,
+      passed,
+      attempts
     }),
   });
   if (!res.ok) throw new Error(`Status: ${res.status}`);

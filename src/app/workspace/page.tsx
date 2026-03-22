@@ -72,7 +72,7 @@ interface TestResult {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const API = "http://localhost:8000";
+const API = "https://kodo-yx1z.onrender.com";
 
 function getOrCreateUserId(): string {
   const existing = localStorage.getItem("kodo_user_id");
@@ -289,11 +289,10 @@ function ChatBubble({
           </div>
         )}
         <div
-          className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-            isKodo
-              ? "bg-[#1a0808] border border-white/8 text-[#EFEDE3]/90 rounded-tl-sm"
-              : "bg-[#EFEDE3]/10 border border-white/10 text-[#EFEDE3] rounded-tr-sm"
-          }`}
+          className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${isKodo
+            ? "bg-[#1a0808] border border-white/8 text-[#EFEDE3]/90 rounded-tl-sm"
+            : "bg-[#EFEDE3]/10 border border-white/10 text-[#EFEDE3] rounded-tr-sm"
+            }`}
         >
           {msg.content}
           {msg.streaming && (
@@ -351,11 +350,10 @@ function TestResultsPanel({
         {results.map((r, i) => (
           <div
             key={i}
-            className={`rounded-lg border p-3 text-xs font-mono ${
-              r.passed
-                ? "border-emerald-400/20 bg-emerald-400/5"
-                : "border-rose-400/20 bg-rose-400/5"
-            }`}
+            className={`rounded-lg border p-3 text-xs font-mono ${r.passed
+              ? "border-emerald-400/20 bg-emerald-400/5"
+              : "border-rose-400/20 bg-rose-400/5"
+              }`}
           >
             <div className="flex items-center gap-2 mb-2">
               {r.passed ? (
@@ -531,7 +529,7 @@ export default function WorkspacePage() {
     };
 
     startSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const openProblem = useCallback(async (problemId: string) => {
@@ -879,9 +877,8 @@ export default function WorkspacePage() {
               <div className="flex-1 flex flex-col overflow-hidden">
 
                 <div
-                  className={`border-b border-white/8 bg-[#120606] transition-all duration-300 overflow-hidden ${
-                    problemDescOpen ? "max-h-64" : "max-h-10"
-                  }`}
+                  className={`border-b border-white/8 bg-[#120606] transition-all duration-300 overflow-hidden ${problemDescOpen ? "max-h-64" : "max-h-10"
+                    }`}
                 >
                   <button
                     onClick={() => setProblemDescOpen((v) => !v)}

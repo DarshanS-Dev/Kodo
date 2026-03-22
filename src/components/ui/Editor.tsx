@@ -15,7 +15,7 @@ declare global {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const API = "http://localhost:8000";
+const API = "https://kodo-yx1z.onrender.com";
 
 // Helper to get consistent user ID
 const getUserId = () => {
@@ -442,9 +442,9 @@ _kodo_stdout = _out.getvalue().strip(); _kodo_stderr = _err.getvalue().strip()
             ? <div className="text-[#EFEDE3]/15 italic text-[11px] pt-1">Run your code to see output...</div>
             : output.map((line, idx) => (
               <div key={idx} className={`flex items-start gap-2 leading-relaxed ${line.type === "stderr" ? "text-red-400"
-                  : line.type === "system" ? "text-[#EFEDE3]/20 italic text-[10px]"
-                    : line.type === "info" ? "text-yellow-400/50"
-                      : "text-[#EFEDE3]"
+                : line.type === "system" ? "text-[#EFEDE3]/20 italic text-[10px]"
+                  : line.type === "info" ? "text-yellow-400/50"
+                    : "text-[#EFEDE3]"
                 }`}>
                 {line.type === "stdout" && <ChevronRight size={10} className="mt-1 shrink-0 text-[#EFEDE3]/15" />}
                 {line.type === "stderr" && <span className="shrink-0 text-[9px] font-bold text-red-400 mt-0.5">ERR</span>}
